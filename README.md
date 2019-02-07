@@ -6,6 +6,8 @@
 ## 사용방법
 [**블로그에서 확인**](https://bperhaps.tistory.com/entry/%EC%B9%B4%EC%B9%B4%EC%98%A4%ED%86%A1-%EC%A0%80%EC%9E%A5%EA%B8%B0%EA%B0%84-%EB%A7%8C%EB%A3%8C-%ED%8C%8C%EC%9D%BC-%EB%B3%B5%EA%B5%AC-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8)
 
+	* [**dcyang**](https://github.com/dcyang) 님이 python-magic 5.19 버전 이후 버전을 이용한 python script 를 업데이트 해 주셨습니다. [**[바로가기]**](https://gist.github.com/dcyang/7f857b5cc1a3c6d7f0ebc92a06dafd5d)
+	
 ## 개발 과정
 
 카카오톡으로 사진들을 주고받다 보면 저장기간이 만료되서 사진을 다운로드 하지 못하는 경우가 있다.
