@@ -6,7 +6,6 @@
 ## 사용방법
 [**블로그에서 확인**](https://bperhaps.tistory.com/entry/%EC%B9%B4%EC%B9%B4%EC%98%A4%ED%86%A1-%EC%A0%80%EC%9E%A5%EA%B8%B0%EA%B0%84-%EB%A7%8C%EB%A3%8C-%ED%8C%8C%EC%9D%BC-%EB%B3%B5%EA%B5%AC-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8)
 
-[**dcyang**](https://github.com/dcyang) 님이 python-magic 5.19 버전 이후 버전을 이용한 python script 를 업데이트 해 주셨습니다. [**[바로가기]**](https://gist.github.com/dcyang/7f857b5cc1a3c6d7f0ebc92a06dafd5d)
 	
 ## 개발 과정
 
@@ -44,6 +43,10 @@ HXD를 이용해 파일들을 열어보니 파일 시그니처가 해당 파일�
 물론, 사진 동영상의 시그니처만 처리하고 나머지는 예외처리시켜버리면 라이브러리를 쓰지 않고도 충분히 가능하긴 하지만.. 그건 성격상 안맞기도 하고 (귀찮..) 그냥 라이브러리를 사용하기로 했다.
 사용한 라이브러리는 python-magic이다. 
 
+
+[**dcyang**](https://github.com/dcyang) 님이 python-magic 5.19 버전 이후 버전을 이용한 python script 를 업데이트 해 주셨습니다. [**[바로가기]**](https://gist.github.com/dcyang/7f857b5cc1a3c6d7f0ebc92a06dafd5d)
+
+* 아래 코드는 python-magic 5.19 아래 버전에서 동작합니다.
 ```sh
 # -*- coding: cp949 -*-
  
