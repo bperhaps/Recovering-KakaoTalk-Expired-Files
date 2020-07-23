@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import kakaoproj.view.KakaoProjViewController;
+import kakaoproj.controller.KakaoProjViewController;
 
 public class MainApp extends Application{
 
@@ -21,14 +21,13 @@ public class MainApp extends Application{
 		this.primaryStage.setTitle("Recovering KakaoTalk Expired Files");
 
 		initRootLayout();
-
 		showKakaoProjView();
 	}
 
 	public void initRootLayout(){
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(MainApp.class.getResource("view/RootLayout.fxml"));
+			loader.setLocation(getClass().getResource("/view/RootLayout.fxml"));
 			rootLayout = (BorderPane)loader.load();
 
 			Scene scene = new Scene(rootLayout);
@@ -42,7 +41,7 @@ public class MainApp extends Application{
 	public void showKakaoProjView(){
 		try{
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(MainApp.class.getResource("view/KakaoProjView.fxml"));
+			loader.setLocation(getClass().getResource("/view/KakaoProjView.fxml"));
 			AnchorPane kakaoProjView = (AnchorPane) loader.load();
 
 			rootLayout.setCenter(kakaoProjView);
