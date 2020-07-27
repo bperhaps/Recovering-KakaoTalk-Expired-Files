@@ -75,11 +75,6 @@ public class KakaoProjViewController {
 		}
 		disableEverything();
 
-		alertInform("Please Wait",
-				"Please Wait.",
-				"Copying files from the device."
-		);
-
 		new Thread(() -> {
 			Path fromPath = autoDetection.copyFileFromDevice(contentRoot, Path.of(toAutomationSrcLabel.getText()));
 
@@ -90,6 +85,11 @@ public class KakaoProjViewController {
 
 			enableEverything();
 		}).start();
+
+		alertInform("Please Wait",
+				"Please Wait.",
+				"Copy files from the device."
+		);
 	}
 
 	@FXML
