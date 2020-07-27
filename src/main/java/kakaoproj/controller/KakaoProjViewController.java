@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 
+import org.apache.commons.io.filefilter.MagicNumberFileFilter;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -23,26 +25,23 @@ import kakaoproj.MainApp;
 
 public class KakaoProjViewController {
 	@FXML
-	private Label toSrcLabel;
+	private Label toManualSrcLabel;
 	@FXML
-	private Label fromSrcLabel;
+	private Label fromManualSrcLabel;
 	@FXML
-	private Button startButton;
-
-	private String manualToSrc;
-	private String manualFromSrc;
+	private Label toAutomationSrcLabel;
+	@FXML
+	private Button manualStartButton;
+	@FXML
+	private Button automationStartButton;
 
 	private MainApp mainApp;
 
+	final String automationStartButtonText = "Automation Start";
+	final String manualStartButtonText = "Manual Start";
+	final String waitingText = "Plz Waiting...";
+
 	public KakaoProjViewController() {}
-
-	private void showToSrc(String src) {
-		this.toSrcLabel.setText(src);
-	}
-
-	private void showFromSrc(String src) {
-		this.fromSrcLabel.setText(src);
-	}
 
 	public void setmainApp(MainApp mainApp) {
 		this.mainApp = mainApp;
@@ -53,9 +52,8 @@ public class KakaoProjViewController {
 	}
 
 	@FXML
-	private void handleManualStart() throws Exception {
-
-		if (toSrcLabel.getText().equals("Not selected...") || fromSrcLabel.getText().equals("Not selected...")) {
+	private void handleAutomationStart() throws Exception {
+		if (toAutomationSrcLabel.getText().equals("Not selected...")) {
 			Alert alert = new Alert(AlertType.ERROR);
 			alert.initOwner(mainApp.getPrimaryStage());
 			alert.setTitle("Invalid Source");
@@ -65,38 +63,108 @@ public class KakaoProjViewController {
 			return;
 		}
 
-		manualToSrc = toSrcLabel.getText();
-		manualFromSrc = fromSrcLabel.getText();
+		AutoDetection autoDetection = AutoDetection.getInstance();
 
-		showToSrc("Plz Wait!!!");
-		showFromSrc("DO NOT CLOSE THIS WINDOW!!");
-		startButton.setDisable(true);
+		disableEverything();
+
+		Path fromPath = autoDetection.start();
+		if(fromPath == null) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.initOwner(mainApp.getPrimaryStage());
+			alert.setTitle("Invalid Source");
+			alert.setHeaderText("Can not found Device or KakaoTalk temporary file folder");
+			alert.setContentText("The device cannot be found or the KakaoTalk temporary file folder cannot be found.\n" +
+					"Please try manually.");
+			alert.showAndWait();
+			enableEverything();
+			return;
+		}
 
 		Thread thread = new Thread(() -> {
-			FileHandler.exploreDir(manualToSrc, manualFromSrc);
+			FileHandler.exploreDir(
+					fromPath.toString(),
+					toAutomationSrcLabel.getText()
+			);
+
+			enableEverything();
+			automationStartButton.setText(automationStartButtonText);
+		});
+		thread.start();
+
+		automationStartButton.setText(waitingText);
+	}
+
+	@FXML
+	private void handleManualStart() throws Exception {
+
+		if (toManualSrcLabel.getText().equals("Not selected...") || fromManualSrcLabel.getText().equals("Not selected...")) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.initOwner(mainApp.getPrimaryStage());
+			alert.setTitle("Invalid Source");
+			alert.setHeaderText("Please correct invalid fields");
+			alert.setContentText("Source not selected");
+			alert.showAndWait();
+			return;
+		}
+
+		disableEverything();
+
+		Thread thread = new Thread(() -> {
+			FileHandler.exploreDir(
+					fromManualSrcLabel.getText(),
+					toManualSrcLabel.getText()
+			);
+			enableEverything();
+			manualStartButton.setText(manualStartButtonText);
 		});
 
+		manualStartButton.setText(waitingText);
+
 		thread.start();
-		thread.join();
+	}
 
-		showToSrc("FINISHED");
-		showFromSrc("FINISHED");
-
-		startButton.setDisable(false);
-
+	@FXML
+	private void handleAutomationToSrc() {
+		DirectoryChooser dc = new DirectoryChooser();
+		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
+		showToAutomationSrc(selectedDc.getPath());
 	}
 
 	@FXML
 	private void handleManualToSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
-		showToSrc(selectedDc.getPath());
+		showToManualSrc(selectedDc.getPath());
 	}
 
 	@FXML
 	private void handleManualFromSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
-		showFromSrc(selectedDc.getPath());
+		showFromManualSrc(selectedDc.getPath());
 	}
+
+	private void disableEverything() {
+		manualStartButton.setDisable(true);
+		automationStartButton.setDisable(true);
+	}
+
+	private void enableEverything() {
+		manualStartButton.setDisable(false);
+		automationStartButton.setDisable(false);
+	}
+
+
+	private void showToAutomationSrc(String src) {
+		this.toAutomationSrcLabel.setText(src);
+	}
+
+	private void showToManualSrc(String src) {
+		this.toManualSrcLabel.setText(src);
+	}
+
+	private void showFromManualSrc(String src) {
+		this.fromManualSrcLabel.setText(src);
+	}
+
 }

@@ -10,8 +10,9 @@ import java.util.HashMap;
 
 public class AutoDetection {
 
-    private AutoDetection instance = null;
-    public AutoDetection getInstance() {
+    private static AutoDetection instance = null;
+
+    public static AutoDetection getInstance() {
         if( instance == null ) {
             instance = new AutoDetection();
         }
@@ -27,28 +28,26 @@ public class AutoDetection {
         path.put("com.kakao.talk", "contents");
     }
 
-    public String start() {
+    public Path start() {
         PortableDeviceManager manager = new PortableDeviceManager();
         PortableDevice[] devices = manager.getDevices();
-
         Path tempDir = null;
-        try {
-            tempDir = Files.createTempDirectory("kakaoExpired");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         for(PortableDevice device : devices) {
             try {
                 device.open();
                 PortableDeviceObject[] root = findContentRoot(device, device.getRootObjects(), "start");
-                if (root != null) copyFileFromDevice(root, device, tempDir);
+                if (root != null){
+                    tempDir = Files.createTempDirectory("kakaoExpired");
+                    copyFileFromDevice(root, device, tempDir);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             } finally {
                 device.close();
             }
         }
 
-        return tempDir.toString();
+        return tempDir;
     }
 
     private PortableDeviceObject[] findContentRoot(PortableDevice device, PortableDeviceObject[] object, String p) {
