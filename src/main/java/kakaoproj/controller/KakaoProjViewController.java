@@ -7,6 +7,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 
+import javafx.application.Platform;
 import org.apache.commons.io.filefilter.MagicNumberFileFilter;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
@@ -54,79 +55,71 @@ public class KakaoProjViewController {
 	@FXML
 	private void handleAutomationStart() throws Exception {
 		if (toAutomationSrcLabel.getText().equals("Not selected...")) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.initOwner(mainApp.getPrimaryStage());
-			alert.setTitle("Invalid Source");
-			alert.setHeaderText("Please correct invalid fields");
-			alert.setContentText("Source not selected");
-			alert.showAndWait();
+			alertError("Invalid Source",
+					"Please correct invalid fields",
+					"Source not selected"
+			);
 			return;
 		}
 
 		AutoDetection autoDetection = AutoDetection.getInstance();
 
-		disableEverything();
-
-		Path fromPath = autoDetection.start();
-		if(fromPath == null) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.initOwner(mainApp.getPrimaryStage());
-			alert.setTitle("Invalid Source");
-			alert.setHeaderText("Can not found Device or KakaoTalk temporary file folder");
-			alert.setContentText("The device cannot be found or the KakaoTalk temporary file folder cannot be found.\n" +
-					"Please try manually.");
-			alert.showAndWait();
-			enableEverything();
+		AutoDetection.ContentRoot contentRoot = autoDetection.getContentRoot();
+		if(contentRoot == null) {
+			alertError("Invalid Source",
+					"Can not found Device or KakaoTalk temporary file folder",
+					"The device cannot be found or the KakaoTalk temporary file folder cannot be found.\n" +
+							"Please try manually."
+					);
 			return;
 		}
+		disableEverything();
 
-		Thread thread = new Thread(() -> {
-			FileHandler.exploreDir(
-					fromPath.toString(),
-					toAutomationSrcLabel.getText()
-			);
+		alertInform("Please Wait",
+				"Please Wait.",
+				"Copying files from the device."
+		);
+
+		new Thread(() -> {
+			Path fromPath = autoDetection.copyFileFromDevice(contentRoot, Path.of(toAutomationSrcLabel.getText()));
+
+//			FileHandler.exploreDir(
+//					fromPath.toString(),
+//					toAutomationSrcLabel.getText()
+//			);
 
 			enableEverything();
-			automationStartButton.setText(automationStartButtonText);
-		});
-		thread.start();
-
-		automationStartButton.setText(waitingText);
+		}).start();
 	}
 
 	@FXML
 	private void handleManualStart() throws Exception {
 
 		if (toManualSrcLabel.getText().equals("Not selected...") || fromManualSrcLabel.getText().equals("Not selected...")) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.initOwner(mainApp.getPrimaryStage());
-			alert.setTitle("Invalid Source");
-			alert.setHeaderText("Please correct invalid fields");
-			alert.setContentText("Source not selected");
-			alert.showAndWait();
+			alertError("Invalid Source",
+					"Please correct invalid fields",
+					"Source not selected"
+					);
 			return;
 		}
 
 		disableEverything();
 
-		Thread thread = new Thread(() -> {
+		new Thread(() -> {
 			FileHandler.exploreDir(
 					fromManualSrcLabel.getText(),
 					toManualSrcLabel.getText()
 			);
 			enableEverything();
-			manualStartButton.setText(manualStartButtonText);
-		});
 
-		manualStartButton.setText(waitingText);
-
-		thread.start();
+		}).start();
 	}
 
 	@FXML
 	private void handleAutomationToSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
+		if(selectedDc == null) return;
 		showToAutomationSrc(selectedDc.getPath());
 	}
 
@@ -134,6 +127,7 @@ public class KakaoProjViewController {
 	private void handleManualToSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
+		if(selectedDc == null) return;
 		showToManualSrc(selectedDc.getPath());
 	}
 
@@ -141,17 +135,46 @@ public class KakaoProjViewController {
 	private void handleManualFromSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
+		if(selectedDc == null) return;
 		showFromManualSrc(selectedDc.getPath());
+	}
+
+	private void alertError(String title, String header, String content) {
+		generateAlert(title, header, content, AlertType.ERROR);
+		return;
+	}
+
+	private void alertInform(String title, String header, String content) {
+		generateAlert(title, header, content, AlertType.INFORMATION);
+		return;
+	}
+
+	private void generateAlert(String title, String header, String content, AlertType alertType) {
+		Alert alert = new Alert(alertType);
+		alert.initOwner(mainApp.getPrimaryStage());
+		alert.setTitle(title);
+		alert.setHeaderText(header);
+		alert.setContentText(content);
+		alert.showAndWait();
 	}
 
 	private void disableEverything() {
 		manualStartButton.setDisable(true);
 		automationStartButton.setDisable(true);
+		Platform.runLater(() -> {
+			manualStartButton.setText(waitingText);
+			automationStartButton.setText(waitingText);
+		});
+
 	}
 
 	private void enableEverything() {
 		manualStartButton.setDisable(false);
 		automationStartButton.setDisable(false);
+		Platform.runLater(()-> {
+			manualStartButton.setText(manualStartButtonText);
+			automationStartButton.setText(automationStartButtonText);
+		});
 	}
 
 

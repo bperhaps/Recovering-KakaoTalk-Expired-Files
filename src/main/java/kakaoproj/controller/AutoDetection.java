@@ -3,12 +3,23 @@ package kakaoproj.controller;
 import be.derycke.pieter.com.COMException;
 import jmtp.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
 public class AutoDetection {
+
+    public class ContentRoot {
+        final PortableDeviceObject[] root;
+        final PortableDevice device;
+
+        public ContentRoot(PortableDeviceObject[] root, PortableDevice device) {
+            this.root = root;
+            this.device = device;
+        }
+    }
 
     private static AutoDetection instance = null;
 
@@ -28,25 +39,34 @@ public class AutoDetection {
         path.put("com.kakao.talk", "contents");
     }
 
-    public Path start() {
+    public ContentRoot getContentRoot() {
         PortableDeviceManager manager = new PortableDeviceManager();
         PortableDevice[] devices = manager.getDevices();
-        Path tempDir = null;
+
         for(PortableDevice device : devices) {
             try {
                 device.open();
                 PortableDeviceObject[] root = findContentRoot(device, device.getRootObjects(), "start");
                 if (root != null){
-                    tempDir = Files.createTempDirectory("kakaoExpired");
-                    copyFileFromDevice(root, device, tempDir);
+                    return new ContentRoot(root, device);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             } finally {
                 device.close();
             }
         }
 
+        return null;
+    }
+
+    public Path copyFileFromDevice(ContentRoot cr, Path toSrc){
+        Path tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("kakaoExpired");
+            System.out.println(tempDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        copyFileFromDevice(cr.root, cr.device, tempDir, toSrc);
         return tempDir;
     }
 
@@ -74,14 +94,19 @@ public class AutoDetection {
         return null;
     }
 
-    private void copyFileFromDevice(PortableDeviceObject[] pdos, PortableDevice device, Path src) {
+    private void copyFileFromDevice(PortableDeviceObject[] pdos, PortableDevice device, Path tmpSrc, Path toSrc) {
         for(PortableDeviceObject pdo : pdos) {
             if(pdo instanceof PortableDeviceFolderObject) {
-                copyFileFromDevice(((PortableDeviceFolderObject) pdo).getChildObjects(), device, src);
+                copyFileFromDevice(((PortableDeviceFolderObject) pdo).getChildObjects(), device, tmpSrc, toSrc);
             } else {
                 try {
-                    copy.copyFromPortableDeviceToHost(pdo.getID(), src.toString(), device);
+                    copy.copyFromPortableDeviceToHost(pdo.getID(), tmpSrc.toString(), device);
+                    File tmpFile = new File(tmpSrc.toString() + "/" + pdo.getName());
+                    FileHandler.fileTransform(tmpFile, toSrc.toString());
+                    tmpFile.delete();
                 } catch (COMException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }

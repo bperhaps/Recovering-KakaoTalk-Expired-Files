@@ -32,7 +32,7 @@ class FileHandler {
         }
     }
 
-    static private void fileTransform(File file, String toSrc) throws Exception{
+    static void fileTransform(File file, String toSrc) throws Exception{
         String extension = "";
         FileInputStream inputStream = new FileInputStream(file.getCanonicalPath().toString());
         if( (extension = getExtension(file)) == ""){
@@ -44,7 +44,9 @@ class FileHandler {
                 "/" +
                 sf.format(file.lastModified()));
 
-        folder.mkdirs();
+        if(!folder.exists()) {
+            folder.mkdirs();
+        }
 
         FileOutputStream outputStream = new FileOutputStream(toSrc +
                 "/" +
@@ -66,7 +68,6 @@ class FileHandler {
 
         outputStream.close();
         inputStream.close();
-
     }
 
     static private String getExtension(File filename) throws Exception {
