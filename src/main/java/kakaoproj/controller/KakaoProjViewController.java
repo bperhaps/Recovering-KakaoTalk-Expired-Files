@@ -29,52 +29,51 @@ public class KakaoProjViewController {
 	@FXML
 	private Button startButton;
 
-	private String toSrc;
-	private String fromSrc;
+	private String manualToSrc;
+	private String manualFromSrc;
 
 	private MainApp mainApp;
 
-	public KakaoProjViewController(){}
+	public KakaoProjViewController() {}
 
-	private void showToSrc(String src){
+	private void showToSrc(String src) {
 		this.toSrcLabel.setText(src);
 	}
 
-	private void showFromSrc(String src){
+	private void showFromSrc(String src) {
 		this.fromSrcLabel.setText(src);
 	}
 
-
-	@FXML
-	private void initialize(){
-	}
-
-	public void setmainApp(MainApp mainApp){
+	public void setmainApp(MainApp mainApp) {
 		this.mainApp = mainApp;
 	}
 
 	@FXML
-	private void handleStart() throws Exception{
+	private void initialize() {
+	}
 
-		if(toSrcLabel.getText().equals("Not selected...") || fromSrcLabel.getText().equals("Not selected...")){
+	@FXML
+	private void handleManualStart() throws Exception {
+
+		if (toSrcLabel.getText().equals("Not selected...") || fromSrcLabel.getText().equals("Not selected...")) {
 			Alert alert = new Alert(AlertType.ERROR);
 			alert.initOwner(mainApp.getPrimaryStage());
 			alert.setTitle("Invalid Source");
 			alert.setHeaderText("Please correct invalid fields");
 			alert.setContentText("Source not selected");
 			alert.showAndWait();
-			return ;
+			return;
 		}
 
-		toSrc = toSrcLabel.getText();
-		fromSrc = fromSrcLabel.getText();
+		manualToSrc = toSrcLabel.getText();
+		manualFromSrc = fromSrcLabel.getText();
 
 		showToSrc("Plz Wait!!!");
 		showFromSrc("DO NOT CLOSE THIS WINDOW!!");
 		startButton.setDisable(true);
 
 		Thread thread = new Thread(() -> {
-			searchDir(fromSrc);
+			FileHandler.exploreDir(manualToSrc, manualFromSrc);
 		});
 
 		thread.start();
@@ -87,100 +86,17 @@ public class KakaoProjViewController {
 
 	}
 
-	private void searchDir(String src) {
-		try {
-			File dir = new File(src);
-			File[] fileList = dir.listFiles();
-
-			for (int i = 0; i < fileList.length; i++) {
-				File file = fileList[i];
-				if (file.isFile()) {
-					fileCopy(file);
-				} else if (file.isDirectory()) {
-					searchDir(file.getCanonicalPath().toString());
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void fileCopy(File file) throws Exception{
-		String extension = "";
-		FileInputStream inputStream = new FileInputStream(file.getCanonicalPath().toString());
-		if( (extension = getExtension(file)) == ""){
-			return ;
-		}
-
-		SimpleDateFormat sf = new SimpleDateFormat("yyyy.MM.dd");
-		File folder = new File(toSrc +
-								"/" +
-								sf.format(file.lastModified()));
-
-		folder.mkdirs();
-
-		FileOutputStream outputStream = new FileOutputStream(toSrc +
-																"/" +
-																sf.format(file.lastModified()) +
-																"/" +
-																file.getName() +
-																"." +
-																getExtension(file));
-
-
-		FileChannel fcin = inputStream.getChannel();
-		FileChannel fcout = outputStream.getChannel();
-
-		long size = fcin.size();
-		fcin.transferTo(0, size, fcout);
-
-		fcin.close();
-		fcout.close();
-
-		outputStream.close();
-		inputStream.close();
-
-	}
-
-	private String getExtension(File filename) throws Exception {
-		FileInputStream is = null;
-		try {
-			Metadata metadata = new Metadata();
-			is = new FileInputStream(filename);
-			ContentHandler contenthandler = new BodyContentHandler();
-			Parser parser = new AutoDetectParser();
-			ParseContext pc = new ParseContext();
-
-			metadata.set(Metadata.RESOURCE_NAME_KEY, filename.getName());
-			parser.parse(is, contenthandler, metadata, pc);
-
-			if( is != null )
-				is.close();
-
-			return metadata.get(Metadata.CONTENT_TYPE).split("/")[1];
-		} catch (Exception e){
-			e.printStackTrace();
-
-			if( is != null )
-				is.close();
-
-			return "";
-		}
-	}
-
 	@FXML
-	private void handleToSrc(){
+	private void handleManualToSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
 		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
 		showToSrc(selectedDc.getPath());
 	}
 
 	@FXML
-	private void handleFromSrc(){
+	private void handleManualFromSrc() {
 		DirectoryChooser dc = new DirectoryChooser();
-		File selectedDc  = dc.showDialog(mainApp.getPrimaryStage());
+		File selectedDc = dc.showDialog(mainApp.getPrimaryStage());
 		showFromSrc(selectedDc.getPath());
 	}
-
-
 }

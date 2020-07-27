@@ -20,15 +20,16 @@ public class AutoDetection {
     private AutoDetection() {
         //-Djava.library.path="lib path"
 
-        PortableDeviceManager manager = new PortableDeviceManager();
-        PortableDevice[] devices = manager.getDevices();
-
         path.put("start", "Phone");
         path.put("Phone", "Android");
         path.put("Android", "data");
         path.put("data", "com.kakao.talk");
         path.put("com.kakao.talk", "contents");
+    }
 
+    public String start() {
+        PortableDeviceManager manager = new PortableDeviceManager();
+        PortableDevice[] devices = manager.getDevices();
 
         Path tempDir = null;
         try {
@@ -41,12 +42,13 @@ public class AutoDetection {
             try {
                 device.open();
                 PortableDeviceObject[] root = findContentRoot(device, device.getRootObjects(), "start");
-                if (root == null) return;
-                copyFileFromDevice(root, device, tempDir);
+                if (root != null) copyFileFromDevice(root, device, tempDir);
             } finally {
                 device.close();
             }
         }
+
+        return tempDir.toString();
     }
 
     private PortableDeviceObject[] findContentRoot(PortableDevice device, PortableDeviceObject[] object, String p) {
