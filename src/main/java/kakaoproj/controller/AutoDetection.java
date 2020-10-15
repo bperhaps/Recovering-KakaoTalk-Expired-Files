@@ -5,9 +5,13 @@ import jmtp.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class AutoDetection {
 
@@ -25,12 +29,32 @@ public class AutoDetection {
 
     public static AutoDetection getInstance() {
         if( instance == null ) {
-            instance = new AutoDetection();
+            try {
+                instance = new AutoDetection();
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
         return instance;
     }
-    private AutoDetection() {
+    private AutoDetection() throws NoSuchFieldException, IllegalAccessException {
         //-Djava.library.path="lib path"
+        String newPath = getClass().getResource("/lib/").toString();
+        System.setProperty("java.library.path", newPath);
+
+        Field field = ClassLoader.class.getDeclaredField("sys_paths");
+        field.setAccessible(true);
+
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        List<String> newSysPaths = new ArrayList<>();
+        newSysPaths.add(newPath);
+        newSysPaths.addAll(Arrays.asList((String[])field.get(classLoader)));
+
+        field.set(classLoader, newSysPaths.toArray(new String[newSysPaths.size()]));
+
+        System.loadLibrary("jmtp64");
 
         path.put("start", "Phone");
         path.put("Phone", "Android");
@@ -101,6 +125,8 @@ public class AutoDetection {
             } else {
                 try {
                     copy.copyFromPortableDeviceToHost(pdo.getID(), tmpSrc.toString(), device);
+
+                    String modified = pdo.getDateModified().toString();
                     File tmpFile = new File(tmpSrc.toString() + "/" + pdo.getName());
                     FileHandler.fileTransform(tmpFile, toSrc.toString());
                     tmpFile.delete();

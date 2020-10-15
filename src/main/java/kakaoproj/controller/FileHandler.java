@@ -34,7 +34,7 @@ class FileHandler {
 
     static void fileTransform(File file, String toSrc) throws Exception{
         String extension = "";
-        FileInputStream inputStream = new FileInputStream(file.getCanonicalPath().toString());
+        FileInputStream inputStream = new FileInputStream(file.getCanonicalPath());
         if( (extension = getExtension(file)) == ""){
             return ;
         }
